@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Game Unit 6: A Visit to a School (Full)</title>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        /* --- CẤU HÌNH GIAO DIỆN CHUẨN SÁCH GLOBAL SUCCESS --- */
+        :root {
+            --primary-orange: #f57c00;    /* Màu cam chủ đạo */
+            --primary-green: #2e7d32;     /* Màu xanh lá phụ trợ */
+            --bg-color: #fff3e0;          /* Nền kem nhạt */
+            --text-main: #37474f;
+            --white: #ffffff;
+            --correct: #4caf50;
+            --wrong: #f44336;
+        }
+
+        * { box-sizing: border-box; }
+        body {
+            font-family: 'Nunito', sans-serif;
+            background-color: var(--bg-color);
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            color: var(--text-main);
+            overflow: hidden;
+        }
+
+        /* HEADER */
+        header {
+            background: linear-gradient(to right, var(--primary-orange), #ffb74d);
+            padding: 10px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            height: 60px;
+            z-index: 100;
+        }
+        .logo { font-weight: 900; color: white; font-size: 20px; display: flex; align-items: center; gap: 10px;}
+        
+        .controls { display: flex; gap: 10px; }
+        .btn-music {
+            background: rgba(255,255,255,0.2); border: 2px solid white; color: white;
+            width: 36px; height: 36px; border-radius: 50%; cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            transition: 0.3s;
+        }
+        .btn-music.playing { animation: spin 3s linear infinite; background: white; color: var(--primary-orange); }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+
+        /* TABS NAVIGATION */
+        .tabs-nav {
+            display: flex;
+            background: white;
+            padding: 10px 10px 0 10px;
+            border-bottom: 3px solid var(--primary-orange);
+            gap: 5px;
+            overflow-x: auto;
+        }
+        .tab-btn {
+            flex: 1;
+            padding: 12px 15px;
+            border: none;
+            background: #eceff1;
+            border-radius: 10px 10px 0 0;
+            font-weight: 700;
+            color: #78909c;
+            cursor: pointer;
+            transition: 0.2s;
+            white-space: nowrap;
+            font-size: 15px;
+        }
+        .tab-btn.active {
+            background: var(--primary-orange);
+            color: white;
+            transform: translateY(-2px);
+        }
+        .tab-btn:hover:not(.active) { background: #cfd8dc; }
+
+        /* MAIN CONTENT AREA */
+        .main-container {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            position: relative;
+            max-width: 1000px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        .tab-content { display: none; animation: fadeIn 0.4s; }
+        .tab-content.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* --- STYLES CHO TỪNG DẠNG BÀI --- */
+
+        /* 1. SECTION CARD */
+        .card {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            border-left: 5px solid var(--primary-orange);
+        }
+        .card h3 { margin-top: 0; color: var(--primary-orange); border-bottom: 1px solid #eee; padding-bottom: 10px; }
+
+        /* 2. DIALOGUE (HỘI THOẠI) */
+        .dialogue-box { max-height: 300px; overflow-y: auto; background: #fafafa; padding: 15px; border-radius: 10px; border: 1px solid #eee; }
+        .line { margin-bottom: 12px; }
+        .speaker { font-weight: 800; color: var(--primary-green); margin-right: 5px; }
+        .vi-trans { display: block; color: #888; font-size: 13px; font-style: italic; margin-top: 2px; border-left: 2px solid #ccc; padding-left: 8px; }
+
+        /* 3. MULTIPLE CHOICE */
+        .quiz-item { margin-bottom: 25px; }
+        .question { font-weight: 700; font-size: 18px; margin-bottom: 10px; color: #333; }
+        .options { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .opt-btn {
+            padding: 12px; background: white; border: 2px solid #e0e0e0;
+            border-radius: 8px; cursor: pointer; text-align: left; font-size: 15px;
+            transition: 0.2s; font-family: 'Nunito', sans-serif;
+        }
+        .opt-btn:hover { background: #e3f2fd; border-color: #2196f3; }
+        .opt-btn.correct { background: #e8f5e9; border-color: var(--correct); color: var(--correct); font-weight: bold; }
+        .opt-btn.wrong { background: #ffebee; border-color: var(--wrong); color: var(--wrong); opacity: 0.7; }
+
+        /* 4. MATCHING GAME (VOCABULARY) */
+        .matching-area { display: flex; gap: 20px; justify-content: space-between; }
+        .col { flex: 1; display: flex; flex-direction: column; gap: 10px; }
+        .match-card {
+            background: #fff; border: 2px solid #90caf9; padding: 15px;
+            text-align: center; border-radius: 10px; cursor: pointer; font-weight: bold;
+            transition: 0.2s;
+        }
+        .match-card:hover { transform: scale(1.02); background: #e3f2fd; }
+        .match-card.selected { background: #2196f3; color: white; border-color: #1565c0; }
+        .match-card.matched { background: #a5d6a7; border-color: #4caf50; color: #1b5e20; pointer-events: none; opacity: 0.6; }
+
+        /* 5. FILL IN BLANK (GRAMMAR) */
+        .cloze-sentence { font-size: 18px; margin-bottom: 15px; line-height: 1.8; background: #fffde7; padding: 10px; border-radius: 8px;}
+        .blank-input {
+            border: none; border-bottom: 2px dashed #999;
+            background: transparent; font-size: 18px; width: 80px;
+            text-align: center; color: var(--primary-orange); font-weight: bold;
+            cursor: pointer;
+        }
+        .blank-input:focus { outline: none; border-bottom-style: solid; }
+
+        /* GIẢI THÍCH */
+        .explanation {
+            margin-top: 10px; padding: 10px; background: #e0f7fa;
+            border-left: 4px solid #00acc1; color: #006064; font-size: 14px;
+            display: none; animation: fadeIn 0.3s;
+        }
+
+        /* RESPONSIVE */
+        @media (max-width: 768px) {
+            .options { grid-template-columns: 1fr; }
+            .matching-area { flex-direction: column; }
+            .tabs-nav { flex-wrap: nowrap; overflow-x: auto; }
+        }
+    </style>
+</head>
+<body>
+
+    <audio id="bg-music" loop>
+        <source src="https://www.bensound.com/bensound-music/bensound-ukulele.mp3" type="audio/mpeg">
+    </audio>
+
+    <header>
+        <div class="logo">🏫 Unit 6: A Visit to a School</div>
+        <div class="controls">
+            <button class="btn-music" onclick="toggleMusic()">🎵</button>
+        </div>
+    </header>
+
+    <div class="tabs-nav">
+        <button class="tab-btn active" onclick="openTab(event, 'tab1')">1. Getting Started</button>
+        <button class="tab-btn" onclick="openTab(event, 'tab2')">2. Vocabulary</button>
+        <button class="tab-btn" onclick="openTab(event, 'tab3')">3. Grammar</button>
+        <button class="tab-btn" onclick="openTab(event, 'tab4')">4. Reading</button>
+    </div>
+
+    <div class="main-container">
+
+        <div id="tab1" class="tab-content active">
+            <div class="card">
+                <h3>📖 Listen & Read: A visit to Binh Minh School</h3>
+                <div class="dialogue-box" id="dialogue-content">
+                    </div>
+            </div>
+
+            <div class="card">
+                <h3>❓ Reading Comprehension</h3>
+                <div id="quiz-tab1"></div>
+            </div>
+        </div>
+
+        <div id="tab2" class="tab-content">
+            <div class="card">
+                <h3>🔗 Task 1: Match words (Nối từ)</h3>
+                <p style="text-align: center; color: #666;">Bấm chọn 1 ô bên Trái, sau đó bấm 1 ô tương ứng bên Phải.</p>
+                <div class="matching-area">
+                    <div class="col" id="col-A"></div>
+                    <div class="col" id="col-B"></div>
+                </div>
+            </div>
+            
+            <div class="card">
+                <h3>✍️ Task 2: Complete the sentences (Điền từ)</h3>
+                <div id="vocab-fill-quiz"></div>
+            </div>
+        </div>
+
+        <div id="tab3" class="tab-content">
+            <div class="card">
+                <h3>🛠️ Prepositions of Time & Place (at / in / on)</h3>
+                <p>Chọn giới từ đúng để điền vào chỗ trống.</p>
+                <div id="grammar-quiz"></div>
+            </div>
+        </div>
+
+        <div id="tab4" class="tab-content">
+            <div class="card">
+                <h3>🏫 Quốc Học - Huế</h3>
+                <div style="background: #fff8e1; padding: 15px; border-radius: 8px; line-height: 1.6; margin-bottom: 20px;">
+                    <p><strong>Quoc Hoc - Hue</strong> is one of the oldest schools in Viet Nam. It is on the bank of the Huong River, in Hue. It was founded in 1896. It used to be a school for children from rich and royal families. Well-known people such as Ho Chi Minh, Vo Nguyen Giap, Xuan Dieu studied there.</p>
+                    <p>Nowadays, the school is for gifted students. They are intelligent and study hard. They have to pass an entrance exam to enter the school. It has over 50 classrooms... and many modern facilities.</p>
+                </div>
+                <h3>❓ Answer the questions</h3>
+                <div id="reading-quiz"></div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // --- CƠ SỞ DỮ LIỆU (DATA TỪ 7 ẢNH) ---
+        
+        // 1. Dữ liệu Hội thoại
+        const dialogueData = [
+            { s: "Phong", e: "What are you doing, Mi?", v: "Bạn đang làm gì vậy Mi?" },
+            { s: "Mi", e: "I'm preparing to visit Binh Minh Lower Secondary School.", v: "Mình đang chuẩn bị đi thăm trường THCS Bình Minh." },
+            { s: "Phong", e: "Sounds great! I think that's one of the best schools in my neighbourhood.", v: "Nghe tuyệt quá! Mình nghĩ đó là một trong những trường tốt nhất khu mình sống." },
+            { s: "Mi", e: "We're going in the afternoon.", v: "Chúng mình sẽ đi vào buổi chiều." }
+        ];
+
+        // 2. Dữ liệu Trắc nghiệm Tab 1
+        const quizTab1 = [
+            { q: "1. What are they talking about?", opts: ["A. Computer room", "B. A visit to a school", "C. Library"], ans: 1, expl: "Mi nói: 'I'm preparing to visit Binh Minh... School'." },
+            { q: "2. Who is going to visit the school?", opts: ["A. Mi & teacher", "B. Mi & classmates", "C. Mi, teacher & classmates"], ans: 2, expl: "Mi nói: 'My teacher and my classmates'." },
+            { q: "3. Where is the school?", opts: ["A. In the city", "B. Countryside", "C. In Phong's neighbourhood"], ans: 2, expl: "Phong nói: '...best schools in my neighbourhood'." },
+            { q: "4. When are they going?", opts: ["A. Morning", "B. Afternoon", "C. Noon"], ans: 1, expl: "Mi nói: 'We're going in the afternoon'." }
+        ];
+
+        // 3. Dữ liệu Nối từ Tab 2
+        const matchData = [
+            { id: 1, a: "entrance", b: "examination" },
+            { id: 2, a: "school", b: "facilities" },
+            { id: 3, a: "outdoor", b: "activities" },
+            { id: 4, a: "midterm", b: "test" },
+            { id: 5, a: "gifted", b: "students" }
+        ];
+
+        // 4. Dữ liệu Điền từ Tab 2
+        const vocabFillData = [
+            { text: "Binh Minh Lower Secondary School is for _____ in the city.", ans: "gifted students", opts: ["gifted students", "school facilities"] },
+            { text: "Our _____ usually covers the first three units.", ans: "midterm test", opts: ["midterm test", "entrance examination"] },
+            { text: "Students take part in many _____ during the school year.", ans: "outdoor activities", opts: ["outdoor activities", "school facilities"] },
+            { text: "In order to study at Quoc Hoc - Hue, you have to pass an _____.", ans: "entrance examination", opts: ["entrance examination", "midterm test"] }
+        ];
+
+        // 5. Dữ liệu Grammar Tab 3 (Tổng hợp bài 1, 2, 5)
+        const grammarData = [
+            { text: "In England, schools usually start ____ 9 a.m.", ans: "at", expl: "Giờ giấc (9 a.m) dùng 'at'." },
+            { text: "They built our school a long time ago, maybe ____ 1990.", ans: "in", expl: "Năm (1990) dùng 'in'." },
+            { text: "The school year usually begins ____ September 5th.", ans: "on", expl: "Ngày cụ thể (Sept 5th) dùng 'on'." },
+            { text: "Tom's mother is ____ the kitchen.", ans: "in", expl: "Trong không gian kín (kitchen) dùng 'in'." },
+            { text: "Look! The students are playing football ____ the classroom.", ans: "in", expl: "Trong phòng học dùng 'in'." },
+            { text: "The most beautiful posters are ____ the wall.", ans: "on", expl: "Trên bề mặt (tường) dùng 'on'." }
+        ];
+
+        // 6. Dữ liệu Reading Tab 4
+        const readingQuiz = [
+            { q: "1. Where is Quoc Hoc - Hue located?", opts: ["A. Ha Noi", "B. On the bank of Huong River", "C. Ho Chi Minh City"], ans: 1, expl: "Dòng 2: 'It is on the bank of the Huong River'." },
+            { q: "2. Who studied there?", opts: ["A. Only royal families", "B. Ho Chi Minh, Vo Nguyen Giap", "C. Foreigners"], ans: 1, expl: "Đoạn 1 liệt kê: Ho Chi Minh, Vo Nguyen Giap..." },
+            { q: "3. What are the students like?", opts: ["A. Intelligent and study hard", "B. Rich and lazy", "C. Active"], ans: 0, expl: "Đoạn 2: 'They are intelligent and study hard'." },
+            { q: "4. How many English labs does it have?", opts: ["A. One", "B. Two", "C. Three"], ans: 1, expl: "Đoạn 2: '...two English labs...'." }
+        ];
+
+        // --- HÀM XỬ LÝ GAME ---
+
+        // 1. Init (Khởi tạo)
+        function init() {
+            renderDialogue();
+            renderQuiz("quiz-tab1", quizTab1);
+            renderMatching();
+            renderVocabFill();
+            renderGrammar();
+            renderQuiz("reading-quiz", readingQuiz);
+        }
+
+        // 2. Render Dialogue
+        function renderDialogue() {
+            const container = document.getElementById("dialogue-content");
+            dialogueData.forEach(d => {
+                container.innerHTML += `
+                    <div class="line">
+                        <span class="speaker">${d.s}:</span>
+                        <span>${d.e}</span>
+                        <span class="vi-trans">${d.v}</span>
+                    </div>
+                `;
+            });
+        }
+
+        // 3. Render Quiz (Dùng chung cho Tab 1 & Tab 4)
+        function renderQuiz(elementId, data) {
+            const container = document.getElementById(elementId);
+            data.forEach((item, index) => {
+                let html = `
+                    <div class="quiz-item">
+                        <div class="question">${item.q}</div>
+                        <div class="options">
+                            ${item.opts.map((opt, i) => 
+                                `<button class="opt-btn" onclick="checkQuiz(this, ${i}, ${item.ans}, 'expl-${elementId}-${index}')">${opt}</button>`
+                            ).join('')}
+                        </div>
+                        <div id="expl-${elementId}-${index}" class="explanation">${item.expl}</div>
+                    </div>
+                `;
+                container.innerHTML += html;
+            });
+        }
+
+        function checkQuiz(btn, selectedIndex, correctIndex, explId) {
+            const parent = btn.parentElement;
+            // Disable buttons
+            Array.from(parent.children).forEach(b => b.disabled = true);
+            
+            if (selectedIndex === correctIndex) {
+                btn.classList.add("correct");
+                playSound("correct");
+            } else {
+                btn.classList.add("wrong");
+                parent.children[correctIndex].classList.add("correct");
+                playSound("wrong");
+            }
+            document.getElementById(explId).style.display = "block";
+        }
+
+        // 4. Render & Logic Matching Game
+        let selectedA = null;
+        let matchedCount = 0;
+        
+        function renderMatching() {
+            const colA = document.getElementById("col-A");
+            const colB = document.getElementById("col-B");
+            
+            // Xáo trộn cột B
+            let colBData = [...matchData].sort(() => Math.random() - 0.5);
+
+            matchData.forEach(item => {
+                let card = document.createElement("div");
+                card.className = "match-card";
+                card.innerText = item.a;
+                card.dataset.id = item.id;
+                card.dataset.type = "A";
+                card.onclick = () => handleMatchClick(card);
+                colA.appendChild(card);
+            });
+
+            colBData.forEach(item => {
+                let card = document.createElement("div");
+                card.className = "match-card";
+                card.innerText = item.b;
+                card.dataset.id = item.id;
+                card.dataset.type = "B";
+                card.onclick = () => handleMatchClick(card);
+                colB.appendChild(card);
+            });
+        }
+
+        function handleMatchClick(card) {
+            if (card.classList.contains("matched")) return;
+
+            if (card.dataset.type === "A") {
+                // Nếu chọn cột A
+                if (selectedA) selectedA.classList.remove("selected");
+                selectedA = card;
+                selectedA.classList.add("selected");
+            } else {
+                // Nếu chọn cột B
+                if (!selectedA) return; // Phải chọn A trước
+                
+                if (selectedA.dataset.id === card.dataset.id) {
+                    // Đúng
+                    selectedA.classList.add("matched");
+                    card.classList.add("matched");
+                    selectedA.classList.remove("selected");
+                    selectedA = null;
+                    playSound("correct");
+                } else {
+                    // Sai
+                    playSound("wrong");
+                    card.style.background = "#ffcdd2";
+                    setTimeout(() => card.style.background = "", 500);
+                }
+            }
+        }
+
+        // 5. Render Vocab Fill (Điền từ)
+        function renderVocabFill() {
+            const container = document.getElementById("vocab-fill-quiz");
+            vocabFillData.forEach((item, idx) => {
+                const html = `
+                    <div class="cloze-sentence">
+                        ${idx + 1}. ${item.text.replace('_____', `<select class="blank-input" onchange="checkFill(this, '${item.ans}')">
+                            <option value="">???</option>
+                            ${item.opts.sort(()=>Math.random()-0.5).map(o => `<option value="${o}">${o}</option>`).join('')}
+                        </select>`)}
+                        <span class="fill-feedback" style="margin-left:10px; font-weight:bold;"></span>
+                    </div>
+                `;
+                container.innerHTML += html;
+            });
+        }
+
+        function checkFill(select, correctAns) {
+            const feedback = select.parentElement.querySelector(".fill-feedback");
+            if (select.value === correctAns) {
+                select.style.color = "green";
+                select.disabled = true;
+                feedback.innerHTML = "✔";
+                feedback.style.color = "green";
+                playSound("correct");
+            } else {
+                select.style.color = "red";
+                feedback.innerHTML = "✘";
+                feedback.style.color = "red";
+                playSound("wrong");
+            }
+        }
+
+        // 6. Render Grammar (Cloze test with Prepositions)
+        function renderGrammar() {
+            const container = document.getElementById("grammar-quiz");
+            grammarData.forEach((item, idx) => {
+                const html = `
+                    <div class="cloze-sentence">
+                        ${idx + 1}. ${item.text.replace('____', `<select class="blank-input" onchange="checkGrammar(this, '${item.ans}', 'expl-g-${idx}')">
+                            <option value="">...</option>
+                            <option value="in">in</option>
+                            <option value="on">on</option>
+                            <option value="at">at</option>
+                        </select>`)}
+                        <div id="expl-g-${idx}" class="explanation">${item.expl}</div>
+                    </div>
+                `;
+                container.innerHTML += html;
+            });
+        }
+
+        function checkGrammar(select, ans, explId) {
+            const expl = document.getElementById(explId);
+            if (select.value === ans) {
+                select.style.backgroundColor = "#c8e6c9";
+                expl.style.display = "block";
+                select.disabled = true;
+                playSound("correct");
+            } else {
+                select.style.backgroundColor = "#ffcdd2";
+                playSound("wrong");
+            }
+        }
+
+        // --- UTILS (NHẠC & TAB) ---
+        function openTab(evt, tabName) {
+            const tabcontent = document.getElementsByClassName("tab-content");
+            for (let i = 0; i < tabcontent.length; i++) {
+                tabcontent[i].classList.remove("active");
+            }
+            const tablinks = document.getElementsByClassName("tab-btn");
+            for (let i = 0; i < tablinks.length; i++) {
+                tablinks[i].classList.remove("active");
+            }
+            document.getElementById(tabName).classList.add("active");
+            evt.currentTarget.classList.add("active");
+        }
+
+        // Âm thanh
+        const bgMusic = document.getElementById("bg-music");
+        bgMusic.volume = 0.3;
+        
+        function toggleMusic() {
+            const btn = document.querySelector(".btn-music");
+            if (bgMusic.paused) {
+                bgMusic.play().catch(e => alert("Vui lòng tương tác trang web trước!"));
+                btn.classList.add("playing");
+            } else {
+                bgMusic.pause();
+                btn.classList.remove("playing");
+            }
+        }
+
+        // Sound FX ảo (không cần file mp3)
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        function playSound(type) {
+            if(audioCtx.state === 'suspended') audioCtx.resume();
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            
+            if (type === "correct") {
+                osc.type = "sine";
+                osc.frequency.setValueAtTime(500, audioCtx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(1000, audioCtx.currentTime + 0.1);
+            } else {
+                osc.type = "sawtooth";
+                osc.frequency.setValueAtTime(200, audioCtx.currentTime);
+                osc.frequency.linearRampToValueAtTime(100, audioCtx.currentTime + 0.2);
+            }
+            
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start();
+            gain.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + 0.3);
+            osc.stop(audioCtx.currentTime + 0.3);
+        }
+
+        // Start
+        init();
+
+    </script>
+</body>
+</html>
